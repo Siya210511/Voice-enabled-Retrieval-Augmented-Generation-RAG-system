@@ -78,7 +78,8 @@ class RAGHarness:
 
         # ---- Stage 3: pre-generation guardrail ----
         scores = [c.score for c in retrieval.chunks]
-        guardrail_pre = self.guardrails.check_pre_generation(query_text, scores)
+        top_chunk_text = retrieval.chunks[0].text if retrieval.chunks else None
+        guardrail_pre = self.guardrails.check_pre_generation(query_text, scores, top_chunk_text=top_chunk_text)
         if not guardrail_pre.passed:
             return self._early_exit(
                 request, transcription=transcription, retrieval=retrieval,
@@ -198,15 +199,22 @@ class RAGHarness:
         )
 
 
-def build_default_harness(strategy: str = "metadata_aware", use_real_providers: bool = False):
+def build_default_harness(strategy: str = "metadata_aware", use_real_providers: bool = False, use_full_guardrails: bool = True):
     """Convenience constructor. use_real_providers=False wires up fake STT/
     generator so you can smoke-test the harness without API keys; flip it
-    to True once ELEVENLABS_API_KEY / GEMINI_API_KEY are set."""
+    to True once ELEVENLABS_API_KEY / GEMINI_API_KEY are set.
+    use_full_guardrails=True uses guardrails.full_guardrails.FullGuardrails
+    (recommended); set False to fall back to the basic placeholder."""
     from embedding.retriever import Retriever
-    from .basic_guardrails import BasicGuardrails
 
     retriever = Retriever(strategy=strategy)
-    guardrails = BasicGuardrails()
+
+    if use_full_guardrails:
+        from guardrails.full_guardrails import FullGuardrails
+        guardrails = FullGuardrails()
+    else:
+        from .basic_guardrails import BasicGuardrails
+        guardrails = BasicGuardrails()
 
     if use_real_providers:
         from .providers.stt_providers import ElevenLabsSTT
