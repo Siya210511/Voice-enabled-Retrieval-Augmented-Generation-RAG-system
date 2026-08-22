@@ -17,7 +17,9 @@ class BasicGuardrails(GuardrailChecker):
         self.min_retrieval_score = min_retrieval_score
         self.min_overlap_ratio = min_overlap_ratio
 
-    def check_pre_generation(self, query: str, retrieval_scores: list[float]) -> GuardrailResult:
+    def check_pre_generation(
+        self, query: str, retrieval_scores: list[float], top_chunk_text: str | None = None,
+    ) -> GuardrailResult:
         if not retrieval_scores or max(retrieval_scores) < self.min_retrieval_score:
             return GuardrailResult(
                 passed=False,
