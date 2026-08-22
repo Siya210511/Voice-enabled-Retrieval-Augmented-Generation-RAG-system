@@ -35,9 +35,14 @@ class GuardrailChecker(ABC):
     for a minimal implementation used until the full module lands."""
 
     @abstractmethod
-    def check_pre_generation(self, query: str, retrieval_scores: list[float]) -> GuardrailResult:
+    def check_pre_generation(
+        self, query: str, retrieval_scores: list[float], top_chunk_text: str | None = None,
+    ) -> GuardrailResult:
         """Runs after retrieval, before generation. Used to catch off-topic
-        queries where nothing relevant was retrieved."""
+        queries where nothing relevant was retrieved. top_chunk_text is
+        optional context (the text of the highest-scoring retrieved chunk)
+        that richer implementations can use for a lexical sanity check;
+        simple implementations can ignore it."""
         raise NotImplementedError
 
     @abstractmethod
